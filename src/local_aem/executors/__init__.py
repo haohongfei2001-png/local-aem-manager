@@ -7,6 +7,7 @@ from .github_canary import (
     GitHubCanaryPolicy,
 )
 from .shell import ExecutorSafetyError, ShellExecutor
+from ..developer_thread import DeveloperThreadExecutor, ThreadExecutorError
 
 __all__ = [
     "Executor",
@@ -19,4 +20,6 @@ __all__ = [
     "GitHubCanaryPolicy",
     "GitHubCanaryError",
     "CodexExecutor",
+    "DeveloperThreadExecutor",
+    "ThreadExecutorError",
 ]
