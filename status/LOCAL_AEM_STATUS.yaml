@@ -9,7 +9,7 @@ package_status: IN_PROGRESS
 current_round:
   id: R5
   name: Portfolio + Event-driven Scheduling
-  status: IN_PROGRESS
+  status: COMPLETE
 
 rounds:
   R0: COMPLETE
@@ -17,8 +17,8 @@ rounds:
   R2: COMPLETE
   R3: COMPLETE
   R4: COMPLETE
-  R5: IN_PROGRESS
-  R6: LOCKED
+  R5: COMPLETE
+  R6: READY
   R7: LOCKED
 
 runtime:
@@ -26,13 +26,26 @@ runtime:
   manager_brain_implemented: true
   executor_layer_implemented: true
   canary_controls_implemented: true
-  portfolio_events_implemented: partial
+  portfolio_events_implemented: true
   running: false
   mode: multi_project_shadow
   managed_repo_writes_enabled: false
   live_codex_enabled: false
   browser_executor_enabled: false
   r4_certified_runtime_sha: 7fa1c245844fb185e2def41ee1fe564e295c1649
+  r5_certified_runtime_sha: 90689a558d56fd99d0f8300352fc98609b7f39ca
+  r5_certified_ci_run: 35595750257
 
-next_authorized_action: R5_IMPLEMENT_AND_VERIFY
-next_recommended_round: R5
+legacy_v3:
+  source_path: /Users/hhf/AI-Supervisor/v3
+  source_reaudit: PENDING_LOCAL_ACCESS
+  reuse_claims_allowed: false
+
+next_authorized_action: R6_BROWSER_TAKEOVER
+next_recommended_round: R6
+
+notes:
+  - Owner authorized continuing the full Local AEM v4 package.
+  - R5 event normalization, freshness dedupe, health tick, and portfolio switching are complete.
+  - R6 is READY under whole-package authorization.
+  - Live browser/developer-thread integration must not be certified without real local access evidence.
