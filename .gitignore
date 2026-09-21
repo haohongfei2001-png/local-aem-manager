@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+.local-aem/
+state.db
+state.db-shm
+state.db-wal
+audit.jsonl

@@ -1,0 +1,40 @@
+runtime:
+  mode: shadow
+  data_dir: ~/.local/share/local-aem-manager-ci
+
+policy:
+  repo: haohongfei2001-png/ai-engineering-manager
+  activation: validate_then_activate
+  required_version: ">=0.2.0"
+  keep_last_known_good: true
+
+portfolio:
+  projects:
+    - id: local-aem-self
+      repo: haohongfei2001-png/local-aem-manager
+      default_branch: main
+      status_path: status/LOCAL_AEM_STATUS.yaml
+
+github:
+  token_env: GITHUB_TOKEN
+  api_base: https://api.github.com
+  timeout_seconds: 30
+
+executors:
+  github:
+    enabled: false
+  shell:
+    enabled: false
+  codex:
+    enabled: false
+  browser:
+    enabled: false
+  developer_thread:
+    enabled: false
+
+safety:
+  allow_managed_repo_writes: false
+  force_push: false
+  destructive_git: false
+  one_writer: true
+  persist_secrets: false
