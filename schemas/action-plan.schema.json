@@ -22,11 +22,16 @@
     "project_id": {"type": "string", "minLength": 1},
     "executor": {
       "type": "string",
-      "enum": ["SHELL", "GITHUB", "CODEX"]
+      "enum": ["SHELL", "GITHUB", "CODEX", "DEVELOPER_THREAD"]
     },
     "operation": {
       "type": "string",
-      "enum": ["RUN_SHELL", "GITHUB_MUTATION", "CODEX_TASK"]
+      "enum": [
+        "RUN_SHELL",
+        "GITHUB_MUTATION",
+        "CODEX_TASK",
+        "SEND_THREAD_MESSAGE"
+      ]
     },
     "target": {
       "type": "object",

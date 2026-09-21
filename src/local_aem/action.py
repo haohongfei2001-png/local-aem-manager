@@ -34,6 +34,7 @@ def validate_action_plan(payload: Any) -> dict[str, Any]:
         "RUN_SHELL": "SHELL",
         "GITHUB_MUTATION": "GITHUB",
         "CODEX_TASK": "CODEX",
+        "SEND_THREAD_MESSAGE": "DEVELOPER_THREAD",
     }[payload["operation"]]
     if payload["executor"] != expected:
         raise ActionValidationError(
