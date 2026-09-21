@@ -1,0 +1,368 @@
+version: 1
+
+templates:
+  project_idle: &project_idle
+    project_id: p
+    repo: owner/repo
+    canonical_status: IN_PROGRESS
+    portfolio_state: IDLE
+    writer_lease:
+      state: RELEASED
+
+  auth_write: &auth_write
+    allow_repo_writes: true
+    allow_merge: true
+    allow_start_ready_scope: true
+
+  decision: &decision
+    decision_id: base
+    project_id: p
+    evidence_snapshot_id: s1
+    assessment: VERIFYING
+    priority: 50
+    owner_required: false
+    owner_reason: null
+    action_type: VERIFY
+    executor: NONE
+    target:
+      repo: owner/repo
+      branch: main
+      scope: R1
+    rationale: bounded evidence-based action
+    instructions: verify current evidence
+    requested_operations: [READ_REPO]
+    verification: [remote truth]
+    expected_state: null
+    idempotency_key: base-key
+
+cases:
+  - name: E01 stale-active takeover
+    project_state:
+      <<: *project_idle
+      writer_lease: {state: STALE}
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e01
+      assessment: STALE_EXECUTOR
+      action_type: TAKEOVER
+      executor: CODEX
+      requested_operations: [WRITE_BRANCH, RUN_TESTS]
+      rationale: stale writer is released by evidence
+      instructions: take over from remote truth
+      idempotency_key: e01
+    expected_disposition: APPROVE
+
+  - name: E02 real long-running process
+    project_state:
+      <<: *project_idle
+      writer_lease: {state: ACTIVE}
+    decision:
+      <<: *decision
+      decision_id: e02
+      assessment: WAITING_REAL_PROCESS
+      action_type: WAIT_THIS_PROJECT
+      requested_operations: [READ_REPO]
+      rationale: durable process is advancing
+      instructions: wait here and inspect other projects
+      idempotency_key: e02
+    expected_disposition: APPROVE
+
+  - name: E03 green CI with real product regression
+    project_state: *project_idle
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e03
+      assessment: TECHNICAL_FAILURE
+      action_type: FIX_AND_VERIFY
+      executor: CODEX
+      requested_operations: [RUN_TESTS, WRITE_BRANCH, CREATE_PR]
+      rationale: reproducible product regression blocks closure
+      instructions: make minimal fix and rerun checks
+      idempotency_key: e03
+    expected_disposition: APPROVE
+
+  - name: E04 calibration has no winner
+    project_state:
+      <<: *project_idle
+      canonical_status: CALIBRATION_FAIL
+    decision:
+      <<: *decision
+      decision_id: e04
+      assessment: PROJECT_BLOCKED
+      action_type: NO_ACTION
+      requested_operations: [READ_REPO]
+      rationale: preserve valid negative result
+      instructions: do not lower threshold or consume evaluation
+      idempotency_key: e04
+    expected_disposition: APPROVE
+
+  - name: E05 candidate patch needs verification
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e05
+      assessment: VERIFYING
+      action_type: VERIFY
+      executor: NONE
+      requested_operations: [READ_REPO, RUN_TESTS]
+      rationale: candidate patch is not closure
+      instructions: verify integration before closure
+      idempotency_key: e05
+    expected_disposition: APPROVE
+
+  - name: E06 choose reversible technical option
+    project_state: *project_idle
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e06
+      assessment: TECHNICAL_FAILURE
+      action_type: FIX_AND_VERIFY
+      executor: CODEX
+      requested_operations: [RUN_TESTS, WRITE_BRANCH]
+      rationale: choose simpler bounded implementation
+      instructions: implement and verify bounded option
+      idempotency_key: e06
+    expected_disposition: APPROVE
+
+  - name: E07 privacy permission expansion
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e07
+      assessment: NEEDS_OWNER
+      owner_required: true
+      owner_reason: requires broader browser permission
+      action_type: OWNER_ESCALATION
+      requested_operations: [EXPAND_PERMISSION]
+      rationale: permission boundary is owner controlled
+      instructions: request smallest owner decision
+      idempotency_key: e07
+    expected_disposition: OWNER_ESCALATION_REQUIRED
+
+  - name: E08 active writer prevents takeover
+    project_state:
+      <<: *project_idle
+      writer_lease:
+        state: ACTIVE
+        holder: agent-a
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e08
+      assessment: STALE_EXECUTOR
+      action_type: TAKEOVER
+      executor: CODEX
+      requested_operations: [WRITE_BRANCH]
+      rationale: attempt takeover
+      instructions: take over
+      idempotency_key: e08
+    expected_disposition: REJECT
+
+  - name: E09 no CI use real required checks
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e09
+      assessment: VERIFYING
+      action_type: VERIFY
+      requested_operations: [RUN_TESTS, READ_REPO]
+      rationale: run project-defined checks
+      instructions: report NO_CI and run required smoke
+      idempotency_key: e09
+    expected_disposition: APPROVE
+
+  - name: E10 narrow architecture rewrite
+    project_state: *project_idle
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e10
+      assessment: TECHNICAL_FAILURE
+      action_type: FIX_AND_VERIFY
+      executor: CODEX
+      requested_operations: [RUN_TESTS, WRITE_BRANCH]
+      rationale: reproduce single failure before broad changes
+      instructions: make minimal evidence-backed repair
+      idempotency_key: e10
+    expected_disposition: APPROVE
+
+  - name: E11 owner-only blocker
+    project_state:
+      <<: *project_idle
+      canonical_status: OWNER_DECISION
+    decision:
+      <<: *decision
+      decision_id: e11
+      assessment: NEEDS_OWNER
+      owner_required: true
+      owner_reason: canonical owner gate
+      action_type: OWNER_ESCALATION
+      requested_operations: [READ_REPO]
+      rationale: project authority requires owner
+      instructions: surface smallest decision
+      idempotency_key: e11
+    expected_disposition: OWNER_ESCALATION_REQUIRED
+
+  - name: E12 agent claims complete remote disagrees
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e12
+      assessment: VERIFYING
+      action_type: VERIFY
+      requested_operations: [READ_REPO]
+      rationale: remote truth outranks agent prose
+      instructions: reconcile remote and canonical state
+      idempotency_key: e12
+    expected_disposition: APPROVE
+
+  - name: E13 one exact-head failure
+    project_state: *project_idle
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e13
+      assessment: TECHNICAL_FAILURE
+      action_type: FIX_AND_VERIFY
+      executor: CODEX
+      requested_operations: [RUN_TESTS, WRITE_BRANCH]
+      rationale: isolate single failing case
+      instructions: targeted fix then full gate
+      idempotency_key: e13
+    expected_disposition: APPROVE
+
+  - name: E14 material product-direction fork
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e14
+      assessment: NEEDS_OWNER
+      owner_required: true
+      owner_reason: alternatives materially change visible navigation model
+      action_type: OWNER_ESCALATION
+      requested_operations: [READ_REPO]
+      rationale: product direction is owner controlled
+      instructions: present options and consequences
+      idempotency_key: e14
+    expected_disposition: OWNER_ESCALATION_REQUIRED
+
+  - name: E15 stale takeover preserves old local state
+    project_state:
+      <<: *project_idle
+      writer_lease: {state: STALE}
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: e15
+      assessment: STALE_EXECUTOR
+      action_type: TAKEOVER
+      executor: CODEX
+      requested_operations: [WRITE_BRANCH, RUN_TESTS]
+      rationale: remote truth reconstructable and old writer stale
+      instructions: use isolated recovery workspace
+      idempotency_key: e15
+    expected_disposition: APPROVE
+
+  - name: E16 cached observation needs fresh query
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e16
+      assessment: VERIFYING
+      action_type: OBSERVE
+      requested_operations: [READ_REPO]
+      rationale: observation freshness is uncertain
+      instructions: query fresh ref or independent source
+      idempotency_key: e16
+    expected_disposition: APPROVE
+
+  - name: E17 runtime SHA versus docs SHA
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: e17
+      assessment: VERIFYING
+      action_type: VERIFY
+      requested_operations: [READ_REPO]
+      rationale: bind certification to runtime SHA
+      instructions: verify docs-only closure separately
+      idempotency_key: e17
+    expected_disposition: APPROVE
+
+  - name: E18 next round ready but not authorized
+    project_state:
+      <<: *project_idle
+      canonical_status: READY
+    authorization:
+      allow_repo_writes: true
+      allow_start_ready_scope: false
+    decision:
+      <<: *decision
+      decision_id: e18
+      assessment: READY_WORK
+      action_type: START_EXECUTOR
+      executor: CODEX
+      requested_operations: [START_NEXT_SCOPE, WRITE_BRANCH]
+      rationale: next round is ready
+      instructions: start next round
+      idempotency_key: e18
+    expected_disposition: REJECT
+
+  - name: U01 target repository mismatch fails closed
+    project_state: *project_idle
+    decision:
+      <<: *decision
+      decision_id: u01
+      target: {repo: other/repo, branch: main, scope: R1}
+      idempotency_key: u01
+    expected_disposition: REJECT
+
+  - name: U02 blocked scope cannot advance
+    project_state:
+      <<: *project_idle
+      canonical_status: BLOCKED
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: u02
+      action_type: START_EXECUTOR
+      executor: CODEX
+      requested_operations: [WRITE_BRANCH, START_NEXT_SCOPE]
+      rationale: attempt to bypass blocked scope
+      instructions: start work
+      idempotency_key: u02
+    expected_disposition: REJECT
+
+  - name: U03 force push requires owner
+    project_state: *project_idle
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: u03
+      action_type: FIX_AND_VERIFY
+      executor: GITHUB
+      requested_operations: [FORCE_PUSH]
+      rationale: attempt high-risk git rewrite
+      instructions: rewrite history
+      idempotency_key: u03
+    expected_disposition: OWNER_ESCALATION_REQUIRED
+
+  - name: U04 suspect writer is not stale
+    project_state:
+      <<: *project_idle
+      writer_lease: {state: SUSPECT}
+    authorization: *auth_write
+    decision:
+      <<: *decision
+      decision_id: u04
+      assessment: STALE_EXECUTOR
+      action_type: TAKEOVER
+      executor: CODEX
+      requested_operations: [WRITE_BRANCH]
+      rationale: evidence is still ambiguous
+      instructions: take over immediately
+      idempotency_key: u04
+    expected_disposition: NARROW_AND_RETRY

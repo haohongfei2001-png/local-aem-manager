@@ -13,6 +13,7 @@ from .db import StateDB
 from .github_read import GitHubReadClient
 from .policy import sync_policy
 from .portfolio import observe_portfolio
+from .replay import replay_summary, run_replay_file
 
 
 def _data_dir(config, override: str | None) -> Path:
@@ -142,6 +143,12 @@ def command_shadow_once(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_replay(args: argparse.Namespace) -> int:
+    summary = replay_summary(run_replay_file(args.fixture))
+    print(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True))
+    return 0 if summary["failed"] == 0 else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="local-aem")
     parser.add_argument(
@@ -165,6 +172,10 @@ def build_parser() -> argparse.ArgumentParser:
     shadow = sub.add_parser("shadow-once")
     shadow.add_argument("--json", action="store_true")
     shadow.set_defaults(func=command_shadow_once)
+
+    replay = sub.add_parser("replay")
+    replay.add_argument("fixture")
+    replay.set_defaults(func=command_replay)
     return parser
 
 

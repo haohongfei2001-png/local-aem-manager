@@ -20,14 +20,27 @@ manager:
 providers:
   deepseek:
     base_url: null
+    model: null
     api_key_ref: DEEPSEEK_API_KEY
+    json_mode: false
+  openai_compatible:
+    base_url: null
+    model: null
+    api_key_ref: OPENAI_API_KEY
+    json_mode: false
 
 portfolio:
   projects: []
 
 github:
   transport: auto
+  token_env: GITHUB_TOKEN
   poll_seconds: 30
+
+authorization:
+  allow_repo_writes: false
+  allow_merge: false
+  allow_start_ready_scope: false
 
 executors:
   github:

@@ -4,11 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "local-aem-manager"
-version = "0.1.0"
+version = "0.2.0"
 description = "Local runtime for the Autonomous Engineering Manager playbook"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["PyYAML>=6.0,<7"]
+dependencies = [
+  "PyYAML>=6.0,<7",
+  "jsonschema>=4.23,<5",
+]
 
 [project.optional-dependencies]
 test = ["pytest>=8,<9"]
@@ -21,6 +24,9 @@ package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+local_aem = ["schemas/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

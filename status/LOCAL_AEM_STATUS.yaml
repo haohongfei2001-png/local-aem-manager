@@ -2,18 +2,19 @@ schema_version: 1
 package: LOCAL-AEM-MANAGER-v4
 architecture_version: "4.0"
 policy_baseline: "AEM-v0.2.0"
+authorization_scope: WHOLE_PACKAGE_PREAUTHORIZED
 
 package_status: IN_PROGRESS
 
 current_round:
-  id: R1
-  name: Read-only Shadow Foundation
-  status: COMPLETE
+  id: R2
+  name: Manager Brain + Deterministic Gate
+  status: IN_PROGRESS
 
 rounds:
   R0: COMPLETE
   R1: COMPLETE
-  R2: READY
+  R2: IN_PROGRESS
   R3: LOCKED
   R4: LOCKED
   R5: LOCKED
@@ -22,24 +23,23 @@ rounds:
 
 runtime:
   foundation_implemented: true
+  manager_brain_implemented: partial
   running: false
   mode: shadow
   managed_repo_writes_enabled: false
   executors_enabled: false
-  certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
-  certified_ci_run: 35584344131
+  r1_certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
+  r1_certified_ci_run: 35584344131
 
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
   source_reaudit: PENDING_LOCAL_ACCESS
   reuse_claims_allowed: false
 
-next_authorized_action: null
+next_authorized_action: R2_IMPLEMENT_AND_VERIFY
 next_recommended_round: R2
 
 notes:
-  - R1 read-only shadow foundation is complete.
-  - PR CI 35584205185 passed unit and real-readonly-shadow jobs.
-  - Exact-main runtime CI 35584344131 passed on c72d5d81dc01f9f2683839c59b8064cdca004927.
-  - R1 performs no managed-repository writes and enables no executors.
-  - R2 is READY but NOT_STARTED and is not authorized by this execution.
+  - Owner authorized continuing the full Local AEM v4 package.
+  - R2 remains decision-only; no managed project writes or executor actions are enabled.
+  - R3 remains locked until R2 exact-main verification and closure.

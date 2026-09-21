@@ -21,6 +21,17 @@ jobs:
       - run: python -m compileall -q src tests
       - run: pytest -q
 
+  policy-replay:
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: local-aem replay tests/fixtures/aem-v0.2-replays.yaml
+
   real-readonly-shadow:
     needs: unit
     runs-on: ubuntu-latest
