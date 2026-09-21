@@ -6,6 +6,7 @@ import os
 import uuid
 from dataclasses import dataclass
 from typing import Any
+from urllib.error import HTTPError
 from urllib.parse import quote, urlencode
 from urllib.request import Request, urlopen
 
@@ -14,7 +15,9 @@ from .shell import ExecutorSafetyError
 
 
 class GitHubCanaryError(RuntimeError):
-    pass
+    def __init__(self, message: str, *, status: int | None = None):
+        super().__init__(message)
+        self.status = status
 
 
 @dataclass(frozen=True)
@@ -91,6 +94,11 @@ class GitHubCanaryExecutor:
         try:
             with self.opener(request, timeout=self.timeout) as response:
                 body = response.read().decode("utf-8")
+        except HTTPError as exc:
+            raise GitHubCanaryError(
+                f"GitHub canary {method} failed for {path}: HTTP {exc.code}",
+                status=exc.code,
+            ) from exc
         except Exception as exc:
             raise GitHubCanaryError(
                 f"GitHub canary {method} failed for {path}: {exc}"
@@ -136,6 +144,8 @@ class GitHubCanaryExecutor:
         owner, repo_name = self.policy.repo.split("/", 1)
         root = f"/repos/{quote(owner, safe='')}/{quote(repo_name, safe='')}"
         pr_number = None
+        commit_sha = None
+        external_pr_required = False
         try:
             base = self._request(
                 "GET",
@@ -146,10 +156,7 @@ class GitHubCanaryExecutor:
             self._request(
                 "POST",
                 f"{root}/git/refs",
-                {
-                    "ref": f"refs/heads/{branch}",
-                    "sha": base_sha,
-                },
+                {"ref": f"refs/heads/{branch}", "sha": base_sha},
             )
 
             safe_path = "/".join(
@@ -177,36 +184,58 @@ class GitHubCanaryExecutor:
             if remote_text != content:
                 raise GitHubCanaryError("remote canary file content mismatch")
 
-            pr = self._request(
-                "POST",
-                f"{root}/pulls",
-                {
-                    "title": title,
-                    "head": branch,
-                    "base": base_branch,
-                    "body": (
-                        "R4 single-repository canary. "
-                        "This PR is verification-only and must not be merged."
-                    ),
-                },
-            )
-            pr_number = int(pr["number"])
-            if pr["head"]["ref"] != branch or pr["base"]["ref"] != base_branch:
-                raise GitHubCanaryError("created PR does not match canary scope")
+            try:
+                pr = self._request(
+                    "POST",
+                    f"{root}/pulls",
+                    {
+                        "title": title,
+                        "head": branch,
+                        "base": base_branch,
+                        "body": (
+                            "R4 single-repository canary. "
+                            "This PR is verification-only and must not be merged."
+                        ),
+                    },
+                )
+            except GitHubCanaryError as exc:
+                if exc.status != 403:
+                    raise
+                external_pr_required = True
+                pr = None
 
-            closed = self._request(
-                "PATCH",
-                f"{root}/pulls/{pr_number}",
-                {"state": "closed"},
-            )
-            if closed.get("state") != "closed":
-                raise GitHubCanaryError("canary PR did not close cleanly")
+            if pr is not None:
+                pr_number = int(pr["number"])
+                if (
+                    pr["head"]["ref"] != branch
+                    or pr["base"]["ref"] != base_branch
+                ):
+                    raise GitHubCanaryError(
+                        "created PR does not match canary scope"
+                    )
+                closed = self._request(
+                    "PATCH",
+                    f"{root}/pulls/{pr_number}",
+                    {"state": "closed"},
+                )
+                if closed.get("state") != "closed":
+                    raise GitHubCanaryError(
+                        "canary PR did not close cleanly"
+                    )
 
             result = ExecutorResult(
                 job_id=job_id,
                 executor=self.name,
                 state=ExecutorState.SUCCEEDED,
-                detail="bounded GitHub canary branch/file/PR cycle succeeded",
+                detail=(
+                    "bounded GitHub canary branch/file write succeeded; "
+                    + (
+                        "Actions token cannot create PR, external manager PR "
+                        "verification required"
+                        if external_pr_required
+                        else "PR lifecycle succeeded"
+                    )
+                ),
                 outputs={
                     "repo": self.policy.repo,
                     "base_branch": base_branch,
@@ -214,7 +243,12 @@ class GitHubCanaryExecutor:
                     "path": path,
                     "commit_sha": commit_sha,
                     "pr_number": pr_number,
-                    "pr_state": "closed",
+                    "pr_state": (
+                        "external_required"
+                        if external_pr_required
+                        else "closed"
+                    ),
+                    "external_pr_required": external_pr_required,
                     "merged": False,
                 },
                 started_at=started,
@@ -230,7 +264,9 @@ class GitHubCanaryExecutor:
                     "repo": self.policy.repo,
                     "branch": branch,
                     "path": path,
+                    "commit_sha": commit_sha,
                     "pr_number": pr_number,
+                    "external_pr_required": external_pr_required,
                     "merged": False,
                 },
                 started_at=started,

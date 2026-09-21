@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 
 import pytest
@@ -5,6 +6,7 @@ import pytest
 from local_aem.control import RuntimeControl, RuntimePaused
 from local_aem.executors import (
     ExecutorSafetyError,
+    GitHubCanaryError,
     GitHubCanaryExecutor,
     GitHubCanaryPolicy,
 )
@@ -69,7 +71,11 @@ def test_kill_switch_defaults_paused_and_requires_resume(tmp_path: Path):
             control.assert_new_actions_allowed()
 
 
-def _plan(repo="owner/repo", branch="canary/r4-proof-1", path="canary/proof.json"):
+def _plan(
+    repo="owner/repo",
+    branch="canary/r4-proof-1",
+    path="canary/proof.json",
+):
     return {
         "operation": "GITHUB_MUTATION",
         "dry_run": False,
@@ -97,10 +103,8 @@ def test_canary_executor_scope_is_fail_closed():
 
     with pytest.raises(ExecutorSafetyError):
         executor.prepare(_plan(repo="owner/other"))
-
     with pytest.raises(ExecutorSafetyError):
         executor.prepare(_plan(branch="main"))
-
     with pytest.raises(ExecutorSafetyError):
         executor.prepare(_plan(path="../escape"))
 
@@ -108,3 +112,48 @@ def test_canary_executor_scope_is_fail_closed():
     dry["dry_run"] = True
     with pytest.raises(ExecutorSafetyError):
         executor.prepare(dry)
+
+
+def test_actions_pr_403_becomes_external_pr_verification(monkeypatch):
+    executor = GitHubCanaryExecutor(
+        policy=GitHubCanaryPolicy(
+            repo="owner/repo",
+            base_branch="r4/single-repo-canary",
+            branch_prefix="canary/r4-proof-",
+            path_prefix="canary/",
+        )
+    )
+    plan = {
+        "operation": "GITHUB_MUTATION",
+        "dry_run": False,
+        "target": {"repo": "owner/repo"},
+        "params": {
+            "kind": "CANARY_PR_CYCLE",
+            "branch": "canary/r4-proof-1",
+            "base_branch": "r4/single-repo-canary",
+            "path": "canary/proof.json",
+            "content": "{}\n",
+        },
+    }
+
+    def fake_request(method, path, payload=None, query=None):
+        if method == "GET" and "/branches/" in path:
+            return {"commit": {"sha": "base"}}
+        if method == "POST" and path.endswith("/git/refs"):
+            return {"ref": "refs/heads/canary/r4-proof-1"}
+        if method == "PUT" and "/contents/" in path:
+            return {"commit": {"sha": "proof-sha"}}
+        if method == "GET" and "/contents/" in path:
+            return {
+                "content": base64.b64encode(b"{}\n").decode("ascii")
+            }
+        if method == "POST" and path.endswith("/pulls"):
+            raise GitHubCanaryError("PR creation blocked", status=403)
+        raise AssertionError((method, path))
+
+    monkeypatch.setattr(executor, "_request", fake_request)
+    result = executor.execute(plan)
+    assert result.state.value == "SUCCEEDED"
+    assert result.outputs["external_pr_required"] is True
+    assert result.outputs["commit_sha"] == "proof-sha"
+    assert result.outputs["merged"] is False
