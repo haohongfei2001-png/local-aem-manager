@@ -32,6 +32,17 @@ jobs:
       - run: pip install -e .
       - run: local-aem replay tests/fixtures/aem-v0.2-replays.yaml
 
+  executor-sandbox:
+    needs: unit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: python -m local_aem.selftest
+
   real-readonly-shadow:
     needs: unit
     runs-on: ubuntu-latest

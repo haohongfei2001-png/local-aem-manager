@@ -7,15 +7,15 @@ authorization_scope: WHOLE_PACKAGE_PREAUTHORIZED
 package_status: IN_PROGRESS
 
 current_round:
-  id: R2
-  name: Manager Brain + Deterministic Gate
-  status: COMPLETE
+  id: R3
+  name: Executor Layer in Dry-run / Sandbox
+  status: IN_PROGRESS
 
 rounds:
   R0: COMPLETE
   R1: COMPLETE
   R2: COMPLETE
-  R3: READY
+  R3: IN_PROGRESS
   R4: LOCKED
   R5: LOCKED
   R6: LOCKED
@@ -24,14 +24,15 @@ rounds:
 runtime:
   foundation_implemented: true
   manager_brain_implemented: true
+  executor_layer_implemented: partial
   running: false
-  mode: shadow
+  mode: sandbox
   managed_repo_writes_enabled: false
-  executors_enabled: false
+  live_github_mutations_enabled: false
+  live_codex_enabled: false
+  browser_executor_enabled: false
   r1_certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
-  r1_certified_ci_run: 35584344131
   r2_certified_runtime_sha: 5fc79d7ed9f56ac83993cc9a527be6174ae782d7
-  r2_certified_ci_run: 35585371403
 
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
@@ -43,6 +44,6 @@ next_recommended_round: R3
 
 notes:
   - Owner authorized continuing the full Local AEM v4 package.
-  - R2 provider/manager/gate/replay layers are complete.
-  - R2 enabled no managed project writes and executed no developer executor.
-  - R3 is READY and may start as a new independent execution under whole-package authorization.
+  - R3 may run only bounded sandbox commands and simulated GitHub/Codex actions.
+  - No managed product repository may be modified in R3.
+  - R4 remains locked until R3 exact-main verification and closure.
