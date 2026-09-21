@@ -37,10 +37,12 @@ runtime:
   r5_certified_runtime_sha: 90689a558d56fd99d0f8300352fc98609b7f39ca
   r6_code_certified_runtime_sha: ace7d75b71e88cd4495cf76fb53b79d290504be8
   r6_code_certified_ci_run: 35597382712
+  r6_harness_certified_runtime_sha: 6dd4f16e10861a3a9a730473819e39cb232b02ec
+  r6_harness_certified_ci_run: 35598153437
 
 r6:
   implementation: CERTIFIED
-  local_cert_harness: IMPLEMENTED_PENDING_CI
+  local_cert_harness: CERTIFIED
   live_local_certification: REQUIRED
   local_access_available_in_current_execution: false
   certified_real_chrome: false
@@ -59,9 +61,16 @@ blocker:
   type: ENVIRONMENT
   owner_required: false
   description: >
-    Real Mac/Chrome control is required to execute the prepared R6 local
-    certification harness. The current execution has no usable local-control
-    channel; CI mocks are not accepted as live certification.
+    R6 implementation and one-command local certification harness are both
+    exact-main CI certified. The only remaining gate is executing that harness
+    against the user's current Mac/Chrome session through a usable local-control
+    channel. CI/mock evidence is not accepted as live certification.
 
-next_authorized_action: R6_LOCAL_CAPABILITY_CERTIFICATION
+next_authorized_action: R6_RUN_LOCAL_CERTIFICATION
 next_recommended_round: R6
+
+notes:
+  - Owner authorized continuing the full Local AEM v4 package.
+  - R6 GitHub-side implementation is complete and certified.
+  - No current code change is needed before the local certification run.
+  - R7 remains locked until current real Chrome/thread evidence passes.
