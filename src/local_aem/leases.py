@@ -138,6 +138,42 @@ class WriterLeaseStore:
         assert lease is not None
         return lease
 
+    def mark_stale(
+        self,
+        *,
+        repo: str,
+        branch: str,
+        scope: str,
+        holder: str,
+    ) -> WriterLease:
+        with self.conn:
+            row = self.conn.execute(
+                """
+                SELECT holder, state FROM writer_leases
+                WHERE repo=? AND branch=? AND scope=?
+                """,
+                (repo, branch, scope),
+            ).fetchone()
+            if (
+                row is None
+                or row["holder"] != holder
+                or row["state"] != "SUSPECT"
+            ):
+                raise LeaseConflict(
+                    "only the current SUSPECT writer may be marked STALE"
+                )
+            self.conn.execute(
+                """
+                UPDATE writer_leases
+                SET state='STALE'
+                WHERE repo=? AND branch=? AND scope=?
+                """,
+                (repo, branch, scope),
+            )
+        lease = self.get(repo, branch, scope)
+        assert lease is not None
+        return lease
+
     def release(
         self, *, repo: str, branch: str, scope: str, holder: str
     ) -> WriterLease:

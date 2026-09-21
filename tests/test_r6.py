@@ -17,6 +17,8 @@ from local_aem.freshness import (
     FreshnessEvidence,
     classify_freshness,
 )
+from local_aem.leases import LeaseConflict, WriterLeaseStore
+from local_aem.message_text import message_digest
 from local_aem.takeover import (
     TakeoverDecision,
     assess_takeover,
@@ -97,6 +99,10 @@ def _plan(key="k1"):
         "idempotency_key": key,
         "dry_run": False,
     }
+
+
+def test_message_digest_normalizes_line_endings():
+    assert message_digest("a\r\nb\n") == message_digest("a\nb")
 
 
 def test_confirmed_send_is_durable_and_not_retryable(tmp_path: Path):
@@ -244,6 +250,40 @@ def test_takeover_requires_stale_release_and_remote_truth():
     assert boundary.decision == TakeoverDecision.BLOCKED
 
 
+def test_writer_must_be_suspect_before_mark_stale(tmp_path: Path):
+    path = tmp_path / "runtime.db"
+    with WriterLeaseStore(path) as leases:
+        leases.acquire(
+            repo="owner/repo",
+            branch="main",
+            scope="R6",
+            holder="old",
+        )
+        with pytest.raises(LeaseConflict):
+            leases.mark_stale(
+                repo="owner/repo",
+                branch="main",
+                scope="R6",
+                holder="old",
+            )
+        assert leases.reconcile_restart() == 1
+        stale = leases.mark_stale(
+            repo="owner/repo",
+            branch="main",
+            scope="R6",
+            holder="old",
+        )
+        assert stale.state == "STALE"
+        replacement = leases.acquire(
+            repo="owner/repo",
+            branch="main",
+            scope="R6",
+            holder="new",
+        )
+        assert replacement.state == "ACTIVE"
+        assert replacement.holder == "new"
+
+
 def test_playwright_transport_is_not_live_certified():
     transport = PlaywrightCdpTransport(
         cdp_endpoint="http://127.0.0.1:9222",
@@ -252,6 +292,7 @@ def test_playwright_transport_is_not_live_certified():
             composer="textarea",
             send_button="button",
             assistant_messages="[data-message-author-role=assistant]",
+            user_messages="[data-message-author-role=user]",
         ),
         thread_url_for={"thread-1": "https://example.invalid/thread-1"},
     )

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import uuid
 from typing import Any
 
@@ -16,6 +15,7 @@ from .delivery import (
     may_retry,
 )
 from .executors.base import ExecutorResult, ExecutorState, utc_now
+from .message_text import message_digest
 
 
 class ThreadExecutorError(RuntimeError):
@@ -66,7 +66,7 @@ class DeveloperThreadExecutor:
         thread_id = str(params["thread_id"])
         project_id = str(params.get("project_id") or plan["project_id"])
         message = str(params["message"])
-        digest = hashlib.sha256(message.encode("utf-8")).hexdigest()
+        digest = message_digest(message)
         job_id = f"thread-{uuid.uuid4().hex[:16]}"
         started = utc_now()
 
