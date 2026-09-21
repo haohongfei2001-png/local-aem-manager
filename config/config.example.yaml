@@ -1,0 +1,49 @@
+runtime:
+  mode: shadow
+  health_tick_seconds: 600
+  data_dir: ~/.local/share/local-aem-manager
+  log_level: INFO
+
+policy:
+  repo: haohongfei2001-png/ai-engineering-manager
+  activation: validate_then_activate
+  required_version: ">=0.2.0"
+  keep_last_known_good: true
+
+manager:
+  provider: deepseek
+  model: null
+  timeout_seconds: 180
+  max_retries: 2
+  structured_output_required: true
+
+providers:
+  deepseek:
+    base_url: null
+    api_key_ref: DEEPSEEK_API_KEY
+
+portfolio:
+  projects: []
+
+github:
+  transport: auto
+  poll_seconds: 30
+
+executors:
+  github:
+    enabled: false
+  shell:
+    enabled: false
+  codex:
+    enabled: false
+  browser:
+    enabled: false
+  developer_thread:
+    enabled: false
+
+safety:
+  force_push: false
+  destructive_git: false
+  allow_managed_repo_writes: false
+  one_writer: true
+  persist_secrets: false

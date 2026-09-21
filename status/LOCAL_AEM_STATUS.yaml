@@ -1,0 +1,40 @@
+schema_version: 1
+package: LOCAL-AEM-MANAGER-v4
+architecture_version: "4.0"
+policy_baseline: "AEM-v0.2.0"
+
+package_status: IN_PROGRESS
+
+current_round:
+  id: R0
+  name: Architecture Freeze
+  status: COMPLETE
+
+rounds:
+  R0: COMPLETE
+  R1: READY
+  R2: LOCKED
+  R3: LOCKED
+  R4: LOCKED
+  R5: LOCKED
+  R6: LOCKED
+  R7: LOCKED
+
+runtime:
+  implemented: false
+  running: false
+  managed_repo_writes_enabled: false
+
+legacy_v3:
+  source_path: /Users/hhf/AI-Supervisor/v3
+  source_reaudit: PENDING_LOCAL_ACCESS
+  reuse_claims_allowed: false
+
+next_authorized_action: null
+next_recommended_round: R1
+
+notes:
+  - R0 changed only the local-aem-manager repository.
+  - No legacy worker was started.
+  - No managed product repository was modified.
+  - R1 must remain read-only shadow mode.

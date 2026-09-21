@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/haohongfei2001-png/local-aem-manager/schemas/manager-decision.schema.json",
+  "title": "ManagerDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "project_id",
+    "evidence_snapshot_id",
+    "assessment",
+    "priority",
+    "owner_required",
+    "action_type",
+    "executor",
+    "target",
+    "rationale",
+    "instructions",
+    "verification",
+    "idempotency_key"
+  ],
+  "properties": {
+    "decision_id": {"type": "string", "minLength": 1},
+    "project_id": {"type": "string", "minLength": 1},
+    "evidence_snapshot_id": {"type": "string", "minLength": 1},
+    "assessment": {
+      "type": "string",
+      "enum": [
+        "PROGRESSING",
+        "TECHNICAL_FAILURE",
+        "ENVIRONMENT_FAILURE",
+        "STALE_EXECUTOR",
+        "WAITING_REAL_PROCESS",
+        "READY_WORK",
+        "PROJECT_BLOCKED",
+        "NEEDS_OWNER",
+        "VERIFYING",
+        "COMPLETE"
+      ]
+    },
+    "priority": {"type": "integer", "minimum": 0, "maximum": 100},
+    "owner_required": {"type": "boolean"},
+    "owner_reason": {"type": ["string", "null"]},
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "OBSERVE",
+        "WAIT_THIS_PROJECT",
+        "VERIFY",
+        "INSTRUCT_EXECUTOR",
+        "START_EXECUTOR",
+        "TAKEOVER",
+        "FIX_AND_VERIFY",
+        "CLOSE_SCOPE",
+        "OWNER_ESCALATION",
+        "NO_ACTION"
+      ]
+    },
+    "executor": {
+      "type": "string",
+      "enum": ["NONE", "GITHUB", "SHELL", "CODEX", "BROWSER", "DEVELOPER_THREAD"]
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repo"],
+      "properties": {
+        "repo": {"type": "string"},
+        "branch": {"type": ["string", "null"]},
+        "scope": {"type": ["string", "null"]}
+      }
+    },
+    "rationale": {"type": "string", "minLength": 1},
+    "instructions": {"type": "string"},
+    "verification": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "expected_state": {"type": ["string", "null"]},
+    "idempotency_key": {"type": "string", "minLength": 1}
+  }
+}
