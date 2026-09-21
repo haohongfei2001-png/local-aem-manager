@@ -9,7 +9,7 @@ package_status: IN_PROGRESS
 current_round:
   id: R6
   name: Browser / Developer Thread Executor + Stale Takeover
-  status: IN_PROGRESS
+  status: BLOCKED_LIVE_CERTIFICATION
 
 rounds:
   R0: COMPLETE
@@ -18,7 +18,7 @@ rounds:
   R3: COMPLETE
   R4: COMPLETE
   R5: COMPLETE
-  R6: IN_PROGRESS
+  R6: BLOCKED_LIVE_CERTIFICATION
   R7: LOCKED
 
 runtime:
@@ -27,19 +27,25 @@ runtime:
   executor_layer_implemented: true
   canary_controls_implemented: true
   portfolio_events_implemented: true
-  browser_thread_controls_implemented: partial
+  browser_thread_controls_implemented: true
   running: false
   mode: browser_shadow
   managed_repo_writes_enabled: false
   live_codex_enabled: false
   browser_executor_enabled: false
   r5_certified_runtime_sha: 90689a558d56fd99d0f8300352fc98609b7f39ca
+  r6_code_certified_runtime_sha: ace7d75b71e88cd4495cf76fb53b79d290504be8
+  r6_code_certified_ci_run: 35597382712
 
 r6:
+  implementation: CERTIFIED
   live_local_certification: REQUIRED
   local_access_available_in_current_execution: false
   certified_real_chrome: false
+  certified_thread_observation: false
   certified_thread_send: false
+  certified_post_send_unknown: false
+  certified_rebind: false
   certified_stale_takeover: false
 
 legacy_v3:
@@ -47,11 +53,19 @@ legacy_v3:
   source_reaudit: PENDING_LOCAL_ACCESS
   reuse_claims_allowed: false
 
-next_authorized_action: R6_IMPLEMENT_AND_VERIFY
+blocker:
+  type: ENVIRONMENT
+  owner_required: false
+  description: >
+    Real Mac/Chrome control is required to certify the browser transport and
+    developer-thread takeover path. The current execution has no usable local
+    control channel; CI mocks are not accepted as live certification.
+
+next_authorized_action: R6_LOCAL_CAPABILITY_CERTIFICATION
 next_recommended_round: R6
 
 notes:
   - Owner authorized continuing the full Local AEM v4 package.
-  - R6 code may be implemented and CI-certified without local Chrome access.
-  - R6 must not be marked COMPLETE from mocks/CI alone.
-  - Real Chrome/thread certification is required before R7.
+  - R6 code and deterministic browser-thread control semantics are exact-main CI certified.
+  - R6 is intentionally not COMPLETE until current real Chrome/thread evidence passes.
+  - R7 remains locked.
