@@ -1,0 +1,41 @@
+r6_certification:
+  # Existing Chrome DevTools endpoint. Do not launch a second browser profile.
+  cdp_endpoint: http://127.0.0.1:9222
+
+  # Fill these from the CURRENT browser DOM during local certification.
+  # Do not commit account/session-specific selectors if they contain secrets.
+  selectors:
+    conversation_root: REPLACE_WITH_CURRENT_CONVERSATION_ROOT
+    composer: REPLACE_WITH_CURRENT_COMPOSER
+    send_button: REPLACE_WITH_CURRENT_SEND_BUTTON
+    assistant_messages: REPLACE_WITH_CURRENT_ASSISTANT_MESSAGE_SELECTOR
+    user_messages: REPLACE_WITH_CURRENT_USER_MESSAGE_SELECTOR
+    generating_indicator: null
+    message_id_attribute: data-message-id
+
+  confirmation_timeout_seconds: 20
+
+  # Real developer threads are observe-only during certification.
+  threads:
+    paia:
+      project_id: PAIA
+      url: REPLACE_WITH_CURRENT_PAIA_THREAD_URL
+      observe_only: true
+    pjsdas:
+      project_id: PJSDAS
+      url: REPLACE_WITH_CURRENT_PJSDAS_THREAD_URL
+      observe_only: true
+
+    # Create/use a dedicated harmless ChatGPT test thread for three send probes.
+    certification:
+      project_id: R6_CERTIFICATION
+      url: REPLACE_WITH_DEDICATED_CERTIFICATION_THREAD_URL
+      observe_only: false
+
+  certification_thread: certification
+  send_message_prefix: LOCAL_AEM_R6_CERTIFICATION
+
+  takeover:
+    repo: local/r6-certification
+    branch: r6-certification
+    scope: R6_LOCAL_CERT

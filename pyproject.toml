@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "local-aem-manager"
-version = "0.6.0"
+version = "0.6.1"
 description = "Local runtime for the Autonomous Engineering Manager playbook"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -19,6 +19,7 @@ browser = ["playwright>=1.55,<2"]
 
 [project.scripts]
 local-aem = "local_aem.cli:main"
+local-aem-r6-cert = "local_aem.r6_cert:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

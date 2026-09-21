@@ -28,6 +28,7 @@ runtime:
   canary_controls_implemented: true
   portfolio_events_implemented: true
   browser_thread_controls_implemented: true
+  local_cert_harness_implemented: true
   running: false
   mode: browser_shadow
   managed_repo_writes_enabled: false
@@ -39,6 +40,7 @@ runtime:
 
 r6:
   implementation: CERTIFIED
+  local_cert_harness: IMPLEMENTED_PENDING_CI
   live_local_certification: REQUIRED
   local_access_available_in_current_execution: false
   certified_real_chrome: false
@@ -57,15 +59,9 @@ blocker:
   type: ENVIRONMENT
   owner_required: false
   description: >
-    Real Mac/Chrome control is required to certify the browser transport and
-    developer-thread takeover path. The current execution has no usable local
-    control channel; CI mocks are not accepted as live certification.
+    Real Mac/Chrome control is required to execute the prepared R6 local
+    certification harness. The current execution has no usable local-control
+    channel; CI mocks are not accepted as live certification.
 
 next_authorized_action: R6_LOCAL_CAPABILITY_CERTIFICATION
 next_recommended_round: R6
-
-notes:
-  - Owner authorized continuing the full Local AEM v4 package.
-  - R6 code and deterministic browser-thread control semantics are exact-main CI certified.
-  - R6 is intentionally not COMPLETE until current real Chrome/thread evidence passes.
-  - R7 remains locked.
