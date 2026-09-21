@@ -1,0 +1,28 @@
+name: R4 Canary
+
+on:
+  push:
+    branches:
+      - r4/single-repo-canary
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bounded-canary:
+    if: github.repository == 'haohongfei2001-png/local-aem-manager'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Execute bounded single-repository canary
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          AEM_CANARY_REPO: ${{ github.repository }}
+          AEM_CANARY_BASE_BRANCH: ${{ github.ref_name }}
+          AEM_CANARY_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: python -m local_aem.canary
