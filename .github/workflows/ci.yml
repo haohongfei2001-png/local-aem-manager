@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --upgrade pip
+      - run: pip install -e ".[test]"
+      - run: python -m compileall -q src tests
+      - run: pytest -q
+
+  real-readonly-shadow:
+    needs: unit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - name: Observe real repositories using GET-only client
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          local-aem --config tests/fixtures/real-readonly.yaml --data-dir "$RUNNER_TEMP/aem" shadow-once --json > "$RUNNER_TEMP/snapshot.json"
+          local-aem --config tests/fixtures/real-readonly.yaml --data-dir "$RUNNER_TEMP/aem" status --json > "$RUNNER_TEMP/status.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ["RUNNER_TEMP"])
+          snapshot = json.loads((root / "snapshot.json").read_text())
+          status = json.loads((root / "status.json").read_text())
+          assert snapshot["policy_version"] >= "0.2.0"
+          assert len(snapshot["projects"]) == 1
+          assert snapshot["projects"][0]["repo"] == "haohongfei2001-png/local-aem-manager"
+          assert status["snapshot_id"] == snapshot["snapshot_id"]
+          print("REAL_READONLY_SHADOW_OK", snapshot["snapshot_id"])
+          PY

@@ -6,13 +6,13 @@ policy_baseline: "AEM-v0.2.0"
 package_status: IN_PROGRESS
 
 current_round:
-  id: R0
-  name: Architecture Freeze
-  status: COMPLETE
+  id: R1
+  name: Read-only Shadow Foundation
+  status: IN_PROGRESS
 
 rounds:
   R0: COMPLETE
-  R1: READY
+  R1: IN_PROGRESS
   R2: LOCKED
   R3: LOCKED
   R4: LOCKED
@@ -21,20 +21,22 @@ rounds:
   R7: LOCKED
 
 runtime:
-  implemented: false
+  implemented: partial
   running: false
+  mode: shadow
   managed_repo_writes_enabled: false
+  executors_enabled: false
 
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
   source_reaudit: PENDING_LOCAL_ACCESS
   reuse_claims_allowed: false
 
-next_authorized_action: null
+next_authorized_action: R1_IMPLEMENT_AND_VERIFY
 next_recommended_round: R1
 
 notes:
-  - R0 changed only the local-aem-manager repository.
-  - No legacy worker was started.
-  - No managed product repository was modified.
-  - R1 must remain read-only shadow mode.
+  - R1 implementation is constrained to read-only observation.
+  - No legacy worker may be started.
+  - No managed product repository may be modified.
+  - R2 remains locked until R1 exact-main verification and closure.
