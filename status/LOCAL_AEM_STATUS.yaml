@@ -7,9 +7,9 @@ authorization_scope: WHOLE_PACKAGE_PREAUTHORIZED
 package_status: IN_PROGRESS
 
 current_round:
-  id: R4
-  name: Single-repository Canary
-  status: COMPLETE
+  id: R5
+  name: Portfolio + Event-driven Scheduling
+  status: IN_PROGRESS
 
 rounds:
   R0: COMPLETE
@@ -17,7 +17,7 @@ rounds:
   R2: COMPLETE
   R3: COMPLETE
   R4: COMPLETE
-  R5: READY
+  R5: IN_PROGRESS
   R6: LOCKED
   R7: LOCKED
 
@@ -26,33 +26,13 @@ runtime:
   manager_brain_implemented: true
   executor_layer_implemented: true
   canary_controls_implemented: true
+  portfolio_events_implemented: partial
   running: false
-  mode: canary_certified
+  mode: multi_project_shadow
   managed_repo_writes_enabled: false
-  live_github_mutations_enabled: canary_only
   live_codex_enabled: false
   browser_executor_enabled: false
-  r1_certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
-  r2_certified_runtime_sha: 5fc79d7ed9f56ac83993cc9a527be6174ae782d7
-  r3_certified_runtime_sha: d230694b2821087daf6e41b3b234f505fb510835
   r4_certified_runtime_sha: 7fa1c245844fb185e2def41ee1fe564e295c1649
-  r4_certified_ci_run: 35587064138
 
-canary:
-  repo: haohongfei2001-png/local-aem-manager
-  runtime_write_run: 35586966516
-  proof_branch: canary/r4-proof-35586966516-1
-  proof_commit: 498c1eb020f0856d31d7a5754f2d39ff98a13cb9
-  proof_pr: 6
-  proof_pr_state: closed
-  proof_pr_merged: false
-  actions_native_pr_creation: NOT_CERTIFIED_403
-  external_manager_pr_verification: PASS
-
-legacy_v3:
-  source_path: /Users/hhf/AI-Supervisor/v3
-  source_reaudit: PENDING_LOCAL_ACCESS
-  reuse_claims_allowed: false
-
-next_authorized_action: R5_PORTFOLIO_EVENTS
+next_authorized_action: R5_IMPLEMENT_AND_VERIFY
 next_recommended_round: R5
