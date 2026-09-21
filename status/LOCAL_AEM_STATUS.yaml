@@ -8,12 +8,12 @@ package_status: IN_PROGRESS
 current_round:
   id: R1
   name: Read-only Shadow Foundation
-  status: IN_PROGRESS
+  status: COMPLETE
 
 rounds:
   R0: COMPLETE
-  R1: IN_PROGRESS
-  R2: LOCKED
+  R1: COMPLETE
+  R2: READY
   R3: LOCKED
   R4: LOCKED
   R5: LOCKED
@@ -21,22 +21,25 @@ rounds:
   R7: LOCKED
 
 runtime:
-  implemented: partial
+  foundation_implemented: true
   running: false
   mode: shadow
   managed_repo_writes_enabled: false
   executors_enabled: false
+  certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
+  certified_ci_run: 35584344131
 
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
   source_reaudit: PENDING_LOCAL_ACCESS
   reuse_claims_allowed: false
 
-next_authorized_action: R1_IMPLEMENT_AND_VERIFY
-next_recommended_round: R1
+next_authorized_action: null
+next_recommended_round: R2
 
 notes:
-  - R1 implementation is constrained to read-only observation.
-  - No legacy worker may be started.
-  - No managed product repository may be modified.
-  - R2 remains locked until R1 exact-main verification and closure.
+  - R1 read-only shadow foundation is complete.
+  - PR CI 35584205185 passed unit and real-readonly-shadow jobs.
+  - Exact-main runtime CI 35584344131 passed on c72d5d81dc01f9f2683839c59b8064cdca004927.
+  - R1 performs no managed-repository writes and enables no executors.
+  - R2 is READY but NOT_STARTED and is not authorized by this execution.
