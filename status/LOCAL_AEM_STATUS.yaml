@@ -9,14 +9,14 @@ package_status: IN_PROGRESS
 current_round:
   id: R3
   name: Executor Layer in Dry-run / Sandbox
-  status: IN_PROGRESS
+  status: COMPLETE
 
 rounds:
   R0: COMPLETE
   R1: COMPLETE
   R2: COMPLETE
-  R3: IN_PROGRESS
-  R4: LOCKED
+  R3: COMPLETE
+  R4: READY
   R5: LOCKED
   R6: LOCKED
   R7: LOCKED
@@ -24,7 +24,7 @@ rounds:
 runtime:
   foundation_implemented: true
   manager_brain_implemented: true
-  executor_layer_implemented: partial
+  executor_layer_implemented: true
   running: false
   mode: sandbox
   managed_repo_writes_enabled: false
@@ -33,17 +33,19 @@ runtime:
   browser_executor_enabled: false
   r1_certified_runtime_sha: c72d5d81dc01f9f2683839c59b8064cdca004927
   r2_certified_runtime_sha: 5fc79d7ed9f56ac83993cc9a527be6174ae782d7
+  r3_certified_runtime_sha: d230694b2821087daf6e41b3b234f505fb510835
+  r3_certified_ci_run: 35586038789
 
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
   source_reaudit: PENDING_LOCAL_ACCESS
   reuse_claims_allowed: false
 
-next_authorized_action: R3_EXECUTOR_SANDBOX
-next_recommended_round: R3
+next_authorized_action: R4_CANARY_PREP
+next_recommended_round: R4
 
 notes:
   - Owner authorized continuing the full Local AEM v4 package.
-  - R3 may run only bounded sandbox commands and simulated GitHub/Codex actions.
-  - No managed product repository may be modified in R3.
-  - R4 remains locked until R3 exact-main verification and closure.
+  - R3 sandbox executor layer is complete.
+  - GitHub and Codex live execution remain disabled after R3.
+  - R4 must define one explicit low-risk canary repo/scope before live writes.
