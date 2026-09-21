@@ -44,7 +44,10 @@ r6:
   implementation: CERTIFIED
   local_cert_harness: CERTIFIED
   live_local_certification: REQUIRED
-  local_access_available_in_current_execution: false
+  local_access_available_in_current_execution: true
+  live_attempt_executed: true
+  live_attempt_disposition: BLOCKED_TRANSPORT_INCOMPATIBILITY
+  live_attempt_evidence: docs/receipts/R6_LIVE_ATTEMPT_20260921.md
   certified_real_chrome: false
   certified_thread_observation: false
   certified_thread_send: false
@@ -52,25 +55,84 @@ r6:
   certified_rebind: false
   certified_stale_takeover: false
 
+r6_live_attempt:
+  repo_head: 0deb86e0a4055f4a932a6a725e8ed9c029f5697c
+  harness_runtime_sha: 6dd4f16e10861a3a9a730473819e39cb232b02ec
+  cdp_channel: http://127.0.0.1:9222
+  live: true
+  runs: 2
+  passed: false
+  demonstrated_live:
+    - cdp_attach_and_refresh_rebind
+    - configured_project_to_thread_mapping
+    - latest_assistant_output_and_generating_idle_observation
+    - controlled_stale_writer_takeover
+    - one_writer_invariant
+  not_exercised_live:
+    - normal_exactly_once_send
+    - pre_send_failure_then_permitted_retry
+    - post_send_unknown_then_no_duplicate_retry
+  observed_selector_contract:
+    conversation_root: "#thread"
+    composer: '#prompt-textarea[contenteditable="true"]'
+    send_button: "#composer-submit-button"
+    assistant_messages: '[data-message-author-role="assistant"]'
+    user_messages: '[data-message-author-role="user"]'
+    generating_indicator: '[data-testid="stop-button"]'
+    message_id_attribute: data-message-id
+  blocker_1:
+    id: POST_REFRESH_READINESS_RACE
+    deterministic: true
+    detail: >
+      refresh_thread() reloads with wait_until=domcontentloaded and the harness
+      prepares the composer immediately. Live measurement on the certification
+      thread: domcontentloaded at +0.64s, composer visible at +2.37s. All three
+      probes therefore fail closed as PRE_SEND_FAILED ("composer is not
+      visible") and no send is attempted.
+  blocker_2:
+    id: COMMIT_CONTROL_IS_STOP_WHILE_GENERATING
+    deterministic: true
+    detail: >
+      While a response streams, the single submit control is a stop control
+      (data-testid="stop-button", aria-label="停止回答"); both a click and an
+      Enter press with text in the composer failed to deliver a user message.
+      Because probes 2 and 3 follow the previous probe within ~1-2 seconds,
+      their commit cannot be a real send even if blocker 1 were fixed.
+
 legacy_v3:
   source_path: /Users/hhf/AI-Supervisor/v3
-  source_reaudit: PENDING_LOCAL_ACCESS
+  source_reaudit: PARTIAL_READ_ONLY_BROWSER_ADAPTER
+  reusable_knowledge:
+    - browser_control.py connect_over_cdp pattern
+    - composer selector family (#prompt-textarea)
+    - pre-send vs post-send error separation
   reuse_claims_allowed: false
 
 blocker:
-  type: ENVIRONMENT
-  owner_required: false
+  type: OWNER_AUTHORIZATION_REQUIRED
+  owner_required: true
   description: >
-    R6 implementation and one-command local certification harness are both
-    exact-main CI certified. The only remaining gate is executing that harness
-    against the user's current Mac/Chrome session through a usable local-control
-    channel. CI/mock evidence is not accepted as live certification.
+    The R6 implementation and local certification harness are exact-main CI
+    certified, and the live local run was executed against the owner's real
+    Chrome/ChatGPT session. The live run cannot pass on the current ChatGPT
+    build because of two transport-level defects inside the certified harness:
+    (1) a post-refresh readiness race that fails every probe closed as
+    PRE_SEND_FAILED, and (2) commit-by-click landing on the stop control while
+    the thread is still generating, so probes 2 and 3 cannot perform a real
+    send. Fixing them changes the previously certified harness runtime, so it
+    needs explicit owner authorization for a new R6 change (PR + CI + a fresh
+    live run). No mock or CI result is accepted as a substitute for live
+    browser evidence.
 
-next_authorized_action: R6_RUN_LOCAL_CERTIFICATION
+next_authorized_action: OWNER_AUTHORIZE_R6_TRANSPORT_FIX
 next_recommended_round: R6
 
 notes:
   - Owner authorized continuing the full Local AEM v4 package.
-  - R6 GitHub-side implementation is complete and certified.
-  - No current code change is needed before the local certification run.
-  - R7 remains locked until current real Chrome/thread evidence passes.
+  - R6 GitHub-side implementation and harness are complete and CI certified.
+  - A real local Chrome attempt is now on record and did not pass; see
+    docs/receipts/R6_LIVE_ATTEMPT_20260921.md for the full non-sensitive
+    evidence, blocker detail, and the minimal fix scope.
+  - The certification ran against an isolated local Chrome profile; no message
+    was sent to PAIA, PJSDAS, or HCL.
+  - R7 remains locked until a passing live certification receipt exists.
